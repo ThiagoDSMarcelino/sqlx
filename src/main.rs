@@ -6,9 +6,6 @@ mod drivers;
 fn main() {
     let cli = cli::Cli::parse();
 
-    drivers::add_driver("pg", "PostgreSQL Driver");   
-    drivers::add_driver("postgres", "PostgreSQL Driver");   
-
     match cli.command {
         cli::Commands::Conn { cmd } => {
             match cmd {
@@ -20,7 +17,7 @@ fn main() {
                         return;
                     }
 
-                    println!("Adding connection: {}, Driver: {}, DNS: {}", connection_name, driver.unwrap(), dns);
+                    println!("Adding connection: {}, Driver: {}, DNS: {}", connection_name, driver.unwrap().name(), dns);
                 },
                 cli::ConnCommands::Remove { connection_name } => {
                     println!("Removing connection: {}", connection_name);
