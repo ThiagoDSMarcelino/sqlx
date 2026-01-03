@@ -5,7 +5,7 @@ use std::sync::Arc;
 static DRIVERS: OnceLock<RwLock<HashMap<String, Arc<dyn Driver>>>> = OnceLock::new();
 
 pub trait Driver: Send + Sync {
-    fn name(&self) -> &str;
+    fn test_connection(&self, dns: &str) -> Result<(), String>;
 }
 
 fn get_drivers_lock() -> &'static RwLock<HashMap<String, Arc<dyn Driver>>> {
@@ -18,8 +18,10 @@ pub fn get_driver(key: &str) -> Option<Arc<dyn Driver>> {
     map.get(key).cloned()
 }
 
-pub(crate) fn add_driver(alias: &str, driver: Arc<dyn Driver>) {
+pub(crate) fn add_driver(aliases: &[&str], driver: Arc<dyn Driver>) {
     let drivers_lock = get_drivers_lock();
     let mut map = drivers_lock.write().unwrap();
-    map.insert(alias.to_string(), driver);
+    for alias in aliases.iter() {
+        map.insert(alias.to_string(), driver.clone());
+    }
 }
