@@ -1,6 +1,6 @@
-use crate::drivers::{add_driver, Driver};
-use std::sync::Arc;
+use crate::drivers::{Driver, add_driver};
 use postgres::{Client, NoTls};
+use std::sync::Arc;
 
 struct PostgreSQLDriver;
 
@@ -20,5 +20,8 @@ impl Driver for PostgreSQLDriver {
 }
 
 pub fn register() {
-    add_driver(&["pg", "postgres", "postgresql"], Arc::new(PostgreSQLDriver::new()));
+    add_driver(
+        &["pg", "postgres", "postgresql"],
+        Arc::new(PostgreSQLDriver::new()),
+    );
 }

@@ -4,14 +4,14 @@ use clap::Subcommand;
 #[command(author, version, about, long_about = "Multi-database SQL CLI Tool")]
 pub struct Cli {
     #[command(subcommand)]
-    pub command: Commands
+    pub command: Commands,
 }
 
 #[derive(Subcommand)]
 pub enum Commands {
     Conn {
         #[command(subcommand)]
-        cmd: ConnCommands, 
+        cmd: ConnCommands,
     },
     Run {
         file_path: String,

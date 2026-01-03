@@ -1,6 +1,6 @@
-use std::sync::{OnceLock, RwLock};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::{OnceLock, RwLock};
 
 static DRIVERS: OnceLock<RwLock<HashMap<String, Arc<dyn Driver>>>> = OnceLock::new();
 
