@@ -39,15 +39,27 @@ impl AppConfig {
         Ok(config)
     }
 
-    pub fn add_connection(&mut self, name: String, dns: String) -> Result<(), anyhow::Error> {
-        if self.connections.contains_key(&name) {
+    pub fn add_connection(&mut self, name: &str, dns: &str) -> Result<(), anyhow::Error> {
+        if self.connections.contains_key(name) {
             return Err(anyhow::anyhow!(
                 "Connection name '{}' already exists.",
                 name
             ));
         }
 
-        self.connections.insert(name, dns);
+        self.connections.insert(name.to_string(), dns.to_string());
+        Ok(())
+    }
+
+    pub fn remove_connection(&mut self, name: &str) -> Result<(), anyhow::Error> {
+        if !self.connections.contains_key(name) {
+            return Err(anyhow::anyhow!(
+                "Connection name '{}' does not exist.",
+                name
+            ));
+        }
+
+        self.connections.remove(name);
         Ok(())
     }
 

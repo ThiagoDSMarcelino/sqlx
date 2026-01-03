@@ -67,9 +67,8 @@ fn add_connection(connection_name: &str, connection_type: &str, dns: &str) {
 
     match app_config::AppConfig::load() {
         Ok(mut config) => {
-            match config.add_connection(connection_name.to_string(), dns.to_string()) {
+            match config.add_connection(connection_name, dns) {
                 Ok(_) => {
-
                     config.save().unwrap_or_else(|err| {
                         eprintln!("Failed to save configuration: {}", err);
                     });
@@ -88,7 +87,23 @@ fn add_connection(connection_name: &str, connection_type: &str, dns: &str) {
 }
 
 fn remove_connection(connection_name: &str) {
-    println!("Removing connection: {}", connection_name);
+    match app_config::AppConfig::load() {
+        Ok(mut config) => match config.remove_connection(connection_name) {
+            Ok(_) => {
+                config.save().unwrap_or_else(|err| {
+                    eprintln!("Failed to save configuration: {}", err);
+                });
+                println!("Connection '{}' removed successfully.", connection_name);
+            }
+            Err(err) => {
+                eprintln!("Failed to remove connection: {}", err);
+                return;
+            }
+        },
+        Err(err) => {
+            eprintln!("Failed to load configuration: {}", err);
+        }
+    }
 }
 
 fn run_sql_file(file_path: &str, connection_name: &str) {
