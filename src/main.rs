@@ -4,6 +4,7 @@ mod app_config;
 mod cli;
 mod connection;
 mod drivers;
+mod commands;
 
 fn main() {
     let cli = cli::Cli::parse();
@@ -15,153 +16,23 @@ fn main() {
                 connection_driver,
                 dns,
             } => {
-                add_connection(&connection_name, &connection_driver, &dns);
+                commands::add_connection(&connection_name, &connection_driver, &dns);
             }
             cli::ConnCommands::Remove { connection_name } => {
-                remove_connection(&connection_name);
+                commands::remove_connection(&connection_name);
             }
             cli::ConnCommands::List => {
-                list_connections();
+                commands::list_connections();
             }
         },
         cli::Commands::Run {
             file_path,
             connection_name,
         } => {
-            run_sql_file(&file_path, &connection_name);
+            commands::run_sql_file(&file_path, &connection_name);
         }
         cli::Commands::Drivers => {
-            list_drivers();
-        }
-    }
-}
-
-fn list_drivers() {
-    let drivers = drivers::get_supported_drivers();
-    println!("Supported Drivers:");
-    for driver in drivers {
-        let alias = driver.1.join(", ");
-        println!(" - {}: {}", driver.0, alias);
-    }
-}
-
-fn list_connections() {
-    match app_config::AppConfig::load() {
-        Ok(config) => {
-            let connections = config.get_connections();
-
-            if connections.is_empty() {
-                println!("No connections found.");
-            } else {
-                println!("Saved Connections:");
-                for (name, connection) in connections.iter() {
-                    println!(" - {}: {}", name, connection.dns());
-                }
-            }
-        }
-        Err(err) => {
-            eprintln!("Failed to load configuration: {}", err);
-        }
-    }
-}
-
-fn add_connection(connection_name: &str, connection_driver: &str, dns: &str) {
-    let driver = drivers::get_driver(&connection_driver);
-
-    if driver.is_none() {
-        eprintln!(
-            "Error: Unsupported connection driver '{}'.",
-            connection_driver
-        );
-        return;
-    }
-
-    if let Err(err) = driver.unwrap().test_connection(dns) {
-        eprintln!("Connection test failed: {}", err);
-        return;
-    }
-
-    match app_config::AppConfig::load() {
-        Ok(mut config) => match config.add_connection(connection_name, dns, connection_driver) {
-            Ok(_) => {
-                config.save().unwrap_or_else(|err| {
-                    eprintln!("Failed to save configuration: {}", err);
-                });
-                println!("Connection '{}' added successfully.", connection_name);
-            }
-            Err(err) => {
-                eprintln!("Failed to add connection: {}", err);
-                return;
-            }
-        },
-        Err(err) => {
-            eprintln!("Failed to load configuration: {}", err);
-        }
-    }
-}
-
-fn remove_connection(connection_name: &str) {
-    match app_config::AppConfig::load() {
-        Ok(mut config) => match config.remove_connection(connection_name) {
-            Ok(_) => {
-                config.save().unwrap_or_else(|err| {
-                    eprintln!("Failed to save configuration: {}", err);
-                });
-                println!("Connection '{}' removed successfully.", connection_name);
-            }
-            Err(err) => {
-                eprintln!("Failed to remove connection: {}", err);
-                return;
-            }
-        },
-        Err(err) => {
-            eprintln!("Failed to load configuration: {}", err);
-        }
-    }
-}
-
-fn run_sql_file(file_path: &str, connection_name: &str) {
-    let config = match app_config::AppConfig::load() {
-        Ok(cfg) => cfg,
-        Err(err) => {
-            eprintln!("Failed to load configuration: {}", err);
-            return;
-        }
-    };
-
-    let connection = match config.get_connection(connection_name) {
-        Some(connection) => connection,
-        None => {
-            eprintln!("Connection '{}' not found.", connection_name);
-            return;
-        }
-    };
-
-    let driver = match drivers::get_driver(connection.driver()) {
-        Some(driver) => driver,
-        None => {
-            eprintln!(
-                "Unsupported connection driver for DNS '{}'.",
-                connection.driver()
-            );
-            return;
-        }
-    };
-
-    let sql_content = match std::fs::read_to_string(file_path) {
-        Ok(content) => content,
-        Err(err) => {
-            eprintln!("Failed to read SQL file: {}", err);
-            return;
-        }
-    };
-
-    match driver.execute_query(connection.dns(), &sql_content) {
-        Ok(result) => {
-            println!("{}", result);
-        }
-        Err(err) => {
-            eprintln!("Failed to execute SQL file: {}", err);
+            commands::list_drivers();
         }
     }
 }
