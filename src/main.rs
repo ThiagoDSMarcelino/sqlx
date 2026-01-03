@@ -2,8 +2,8 @@ use clap::Parser;
 
 mod app_config;
 mod cli;
-mod drivers;
 mod connection;
+mod drivers;
 
 fn main() {
     let cli = cli::Cli::parse();
@@ -30,6 +30,18 @@ fn main() {
         } => {
             run_sql_file(&file_path, &connection_name);
         }
+        cli::Commands::Drivers => {
+            list_drivers();
+        }
+    }
+}
+
+fn list_drivers() {
+    let drivers = drivers::get_supported_drivers();
+    println!("Supported Drivers:");
+    for driver in drivers {
+        let alias = driver.1.join(", ");
+        println!(" - {}: {}", driver.0, alias);
     }
 }
 
@@ -57,7 +69,10 @@ fn add_connection(connection_name: &str, connection_driver: &str, dns: &str) {
     let driver = drivers::get_driver(&connection_driver);
 
     if driver.is_none() {
-        eprintln!("Error: Unsupported connection driver '{}'.", connection_driver);
+        eprintln!(
+            "Error: Unsupported connection driver '{}'.",
+            connection_driver
+        );
         return;
     }
 
@@ -67,20 +82,18 @@ fn add_connection(connection_name: &str, connection_driver: &str, dns: &str) {
     }
 
     match app_config::AppConfig::load() {
-        Ok(mut config) => {
-            match config.add_connection(connection_name, dns, connection_driver) {
-                Ok(_) => {
-                    config.save().unwrap_or_else(|err| {
-                        eprintln!("Failed to save configuration: {}", err);
-                    });
-                    println!("Connection '{}' added successfully.", connection_name);
-                }
-                Err(err) => {
-                    eprintln!("Failed to add connection: {}", err);
-                    return;
-                }
+        Ok(mut config) => match config.add_connection(connection_name, dns, connection_driver) {
+            Ok(_) => {
+                config.save().unwrap_or_else(|err| {
+                    eprintln!("Failed to save configuration: {}", err);
+                });
+                println!("Connection '{}' added successfully.", connection_name);
             }
-        }
+            Err(err) => {
+                eprintln!("Failed to add connection: {}", err);
+                return;
+            }
+        },
         Err(err) => {
             eprintln!("Failed to load configuration: {}", err);
         }
@@ -127,7 +140,10 @@ fn run_sql_file(file_path: &str, connection_name: &str) {
     let driver = match drivers::get_driver(connection.driver()) {
         Some(driver) => driver,
         None => {
-            eprintln!("Unsupported connection driver for DNS '{}'.", connection.driver());
+            eprintln!(
+                "Unsupported connection driver for DNS '{}'.",
+                connection.driver()
+            );
             return;
         }
     };
@@ -139,7 +155,6 @@ fn run_sql_file(file_path: &str, connection_name: &str) {
             return;
         }
     };
-
 
     match driver.execute_query(connection.dns(), &sql_content) {
         Ok(result) => {

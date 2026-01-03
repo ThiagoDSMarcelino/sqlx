@@ -14,6 +14,10 @@ impl PostgreSQLDriver {
 }
 
 impl Driver for PostgreSQLDriver {
+    fn name(&self) -> &str {
+        "PostgreSQL"
+    }
+
     fn test_connection(&self, dns: &str) -> Result<(), String> {
         match Client::connect(dns, NoTls) {
             Ok(_) => Ok(()),

@@ -19,6 +19,8 @@ pub enum Commands {
         connection_name: String,
         file_path: String,
     },
+    #[command(about = "List supported database drivers")]
+    Drivers,
 }
 
 #[derive(Subcommand)]
@@ -30,9 +32,7 @@ pub enum ConnCommands {
         dns: String,
     },
     #[command(about = "Remove an existing database connection")]
-    Remove {
-        connection_name: String,
-    },
+    Remove { connection_name: String },
     #[command(about = "List all database connections")]
     List,
 }
