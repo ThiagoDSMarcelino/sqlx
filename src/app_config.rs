@@ -51,6 +51,10 @@ impl AppConfig {
         Ok(())
     }
 
+    pub fn get_connections(&self) -> &HashMap<String, String> {
+        &self.connections
+    }
+
     pub fn save(&self) -> Result<()> {
         let path = Self::get_config_path()?;
 

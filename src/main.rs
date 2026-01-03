@@ -19,12 +19,35 @@ fn main() {
             cli::ConnCommands::Remove { connection_name } => {
                 remove_connection(&connection_name);
             }
+            cli::ConnCommands::List => {
+                list_connections();
+            }
         },
         cli::Commands::Run {
             file_path,
             connection_name,
         } => {
             run_sql_file(&file_path, &connection_name);
+        }
+    }
+}
+
+fn list_connections() {
+    match app_config::AppConfig::load() {
+        Ok(config) => {
+            let connections = config.get_connections();
+
+            if connections.is_empty() {
+                println!("No connections found.");
+            } else {
+                println!("Saved Connections:");
+                for (name, dns) in connections.iter() {
+                    println!(" - {}: {}", name, dns);
+                }
+            }
+        }
+        Err(err) => {
+            eprintln!("Failed to load configuration: {}", err);
         }
     }
 }

@@ -29,4 +29,5 @@ pub enum ConnCommands {
     Remove {
         connection_name: String,
     },
+    List,
 }
