@@ -3,6 +3,7 @@ use clap::Parser;
 mod app_config;
 mod cli;
 mod drivers;
+mod connection;
 
 fn main() {
     let cli = cli::Cli::parse();
@@ -11,10 +12,10 @@ fn main() {
         cli::Commands::Conn { cmd } => match cmd {
             cli::ConnCommands::Add {
                 connection_name,
-                connection_type,
+                connection_driver,
                 dns,
             } => {
-                add_connection(&connection_name, &connection_type, &dns);
+                add_connection(&connection_name, &connection_driver, &dns);
             }
             cli::ConnCommands::Remove { connection_name } => {
                 remove_connection(&connection_name);
@@ -41,8 +42,8 @@ fn list_connections() {
                 println!("No connections found.");
             } else {
                 println!("Saved Connections:");
-                for (name, dns) in connections.iter() {
-                    println!(" - {}: {}", name, dns);
+                for (name, connection) in connections.iter() {
+                    println!(" - {}: {}", name, connection.dns());
                 }
             }
         }
@@ -52,11 +53,11 @@ fn list_connections() {
     }
 }
 
-fn add_connection(connection_name: &str, connection_type: &str, dns: &str) {
-    let driver = drivers::get_driver(&connection_type);
+fn add_connection(connection_name: &str, connection_driver: &str, dns: &str) {
+    let driver = drivers::get_driver(&connection_driver);
 
     if driver.is_none() {
-        eprintln!("Error: Unsupported connection type '{}'.", connection_type);
+        eprintln!("Error: Unsupported connection driver '{}'.", connection_driver);
         return;
     }
 
@@ -67,7 +68,7 @@ fn add_connection(connection_name: &str, connection_type: &str, dns: &str) {
 
     match app_config::AppConfig::load() {
         Ok(mut config) => {
-            match config.add_connection(connection_name, dns) {
+            match config.add_connection(connection_name, dns, connection_driver) {
                 Ok(_) => {
                     config.save().unwrap_or_else(|err| {
                         eprintln!("Failed to save configuration: {}", err);
@@ -107,8 +108,45 @@ fn remove_connection(connection_name: &str) {
 }
 
 fn run_sql_file(file_path: &str, connection_name: &str) {
-    println!(
-        "Running SQL file: {} on connection: {}",
-        file_path, connection_name
-    );
+    let config = match app_config::AppConfig::load() {
+        Ok(cfg) => cfg,
+        Err(err) => {
+            eprintln!("Failed to load configuration: {}", err);
+            return;
+        }
+    };
+
+    let connection = match config.get_connection(connection_name) {
+        Some(connection) => connection,
+        None => {
+            eprintln!("Connection '{}' not found.", connection_name);
+            return;
+        }
+    };
+
+    let driver = match drivers::get_driver(connection.driver()) {
+        Some(driver) => driver,
+        None => {
+            eprintln!("Unsupported connection driver for DNS '{}'.", connection.driver());
+            return;
+        }
+    };
+
+    let sql_content = match std::fs::read_to_string(file_path) {
+        Ok(content) => content,
+        Err(err) => {
+            eprintln!("Failed to read SQL file: {}", err);
+            return;
+        }
+    };
+
+
+    match driver.execute_query(connection.dns(), &sql_content) {
+        Ok(result) => {
+            println!("{}", result);
+        }
+        Err(err) => {
+            eprintln!("Failed to execute SQL file: {}", err);
+        }
+    }
 }

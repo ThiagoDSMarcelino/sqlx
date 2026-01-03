@@ -14,8 +14,8 @@ pub enum Commands {
         cmd: ConnCommands,
     },
     Run {
-        file_path: String,
         connection_name: String,
+        file_path: String,
     },
 }
 
@@ -23,7 +23,7 @@ pub enum Commands {
 pub enum ConnCommands {
     Add {
         connection_name: String,
-        connection_type: String,
+        connection_driver: String,
         dns: String,
     },
     Remove {

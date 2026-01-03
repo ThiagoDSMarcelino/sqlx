@@ -6,6 +6,8 @@ static DRIVERS: OnceLock<RwLock<HashMap<String, Arc<dyn Driver>>>> = OnceLock::n
 
 pub trait Driver: Send + Sync {
     fn test_connection(&self, dns: &str) -> Result<(), String>;
+
+    fn execute_query(&self, dns: &str, query: &str) -> Result<String, String>;
 }
 
 fn get_drivers_lock() -> &'static RwLock<HashMap<String, Arc<dyn Driver>>> {

@@ -1,9 +1,10 @@
+use crate::connection::Connection;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct AppConfig {
-    connections: HashMap<String, String>,
+    connections: HashMap<String, Connection>,
 }
 
 use anyhow::{Context, Result};
@@ -39,7 +40,12 @@ impl AppConfig {
         Ok(config)
     }
 
-    pub fn add_connection(&mut self, name: &str, dns: &str) -> Result<(), anyhow::Error> {
+    pub fn add_connection(
+        &mut self,
+        name: &str,
+        dns: &str,
+        driver: &str,
+    ) -> Result<(), anyhow::Error> {
         if self.connections.contains_key(name) {
             return Err(anyhow::anyhow!(
                 "Connection name '{}' already exists.",
@@ -47,7 +53,8 @@ impl AppConfig {
             ));
         }
 
-        self.connections.insert(name.to_string(), dns.to_string());
+        self.connections
+            .insert(name.to_string(), Connection::new(dns, driver));
         Ok(())
     }
 
@@ -63,7 +70,11 @@ impl AppConfig {
         Ok(())
     }
 
-    pub fn get_connections(&self) -> &HashMap<String, String> {
+    pub fn get_connection(&self, name: &str) -> Option<&Connection> {
+        self.connections.get(name)
+    }
+
+    pub fn get_connections(&self) -> &HashMap<String, Connection> {
         &self.connections
     }
 
