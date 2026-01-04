@@ -1,7 +1,11 @@
 [package]
 name = "sqlx"
 version = "0.1.0"
+authors = ["Thiago dos Santos Marcelino", "Thiago Marcelino <thiagodsmarcelino@gmail.com>"]
 edition = "2024"
+description = "CLI for SQL databases"
+readme = "README.md"
+repository = "https://github.com/ThiagoDSMarcelino/sqlx"
 
 [dependencies]
 anyhow = "1.0.100"
@@ -17,3 +21,8 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.148"
 tabled = "0.20.0"
 uuid = { version = "1.19.0", features = ["v4"] }
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
