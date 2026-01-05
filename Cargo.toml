@@ -1,6 +1,6 @@
 [package]
 name = "sqlx"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Thiago dos Santos Marcelino", "Thiago Marcelino <thiagodsmarcelino@gmail.com>"]
 edition = "2024"
 description = "CLI for SQL databases"
